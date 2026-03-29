@@ -7,7 +7,7 @@ import { generateSamplePosts } from '../lib/sampleData'
 import PostCard from './PostCard'
 import AddPostModal from './AddPostModal'
 
-const USE_SAMPLE_DATA = true
+const USE_SAMPLE_DATA = false
 
 function postsReducer(state, action) {
   switch (action.type) {
@@ -36,11 +36,14 @@ export default function Wall() {
   const cat = getCategoryById(category)
   const totalPages = Math.max(1, Math.ceil(totalCount / POSTS_PER_WALL))
 
-  const fetchPosts = useCallback(async () => {
+  const loadPosts = useCallback(async () => {
+    dispatch({ type: 'loading' })
+
     if (USE_SAMPLE_DATA) {
       const sample = generateSamplePosts(category, 100)
       const from = (page - 1) * POSTS_PER_WALL
-      return { posts: sample.slice(from, from + POSTS_PER_WALL), count: sample.length }
+      dispatch({ type: 'loaded', posts: sample.slice(from, from + POSTS_PER_WALL), totalCount: sample.length })
+      return
     }
 
     const from = (page - 1) * POSTS_PER_WALL
@@ -56,7 +59,7 @@ export default function Wall() {
       console.error('Error fetching posts:', dataResult.error.message)
     }
 
-    return { posts: dataResult.data || [], count: countResult.count || 0 }
+    dispatch({ type: 'loaded', posts: dataResult.data || [], totalCount: countResult.count || 0 })
   }, [category, page])
 
   useEffect(() => {
@@ -64,17 +67,8 @@ export default function Wall() {
       navigate('/')
       return
     }
-
-    let cancelled = false
-    dispatch({ type: 'loading' })
-
-    fetchPosts().then((result) => {
-      if (cancelled) return
-      dispatch({ type: 'loaded', posts: result.posts, totalCount: result.count })
-    })
-
-    return () => { cancelled = true }
-  }, [cat, fetchPosts, navigate])
+    loadPosts()
+  }, [cat, loadPosts, navigate])
 
   useEffect(() => {
     setDisplayPosts(posts)
@@ -97,34 +91,37 @@ export default function Wall() {
   const handlePostCreated = () => {
     setShowAddPost(false)
     setPage(1)
+    loadPosts()
   }
 
   return (
     <div
-      className="min-h-screen pt-20 pb-12 px-4 relative"
-      style={{ background: 'linear-gradient(160deg, #050510 0%, #0a0a20 30%, #0d0818 60%, #080515 100%)' }}
+      className="min-h-screen pt-16 lg:pt-20 relative"
+      style={{ background: '#0a0e17' }}
     >
-      {/* Header */}
+      {/* Sidebar - desktop / Top bar - mobile */}
       <motion.div
-        className="max-w-6xl mx-auto mb-8"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="lg:fixed lg:left-0 lg:top-16 lg:bottom-0 lg:w-48 lg:flex lg:flex-col lg:justify-between lg:py-5 lg:px-4 lg:z-20 px-3 py-3 mb-2 lg:mb-0"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <motion.button
-              onClick={() => navigate('/')}
-              className="text-gray-500 hover:text-indigo-400 transition-colors cursor-pointer"
-              whileHover={{ x: -3 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </motion.button>
+        {/* Top section: back + title + buttons */}
+        <div className="flex lg:flex-col gap-3 lg:gap-5">
+          <motion.button
+            onClick={() => navigate('/')}
+            className="text-gray-500 hover:text-indigo-400 transition-colors cursor-pointer lg:self-start"
+            whileHover={{ x: -3 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </motion.button>
+
+          <div className="flex items-center gap-2 lg:gap-3">
             <motion.span
-              className="text-3xl"
+              className="text-2xl lg:text-3xl"
               style={{ color: cat.accentColor }}
               animate={{ rotate: [0, -5, 5, 0] }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -132,52 +129,87 @@ export default function Wall() {
               {cat.icon}
             </motion.span>
             <div>
-              <h1 className="text-2xl font-bold text-white">{cat.label} Wall</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="text-base lg:text-xl font-bold text-white leading-tight">{cat.label}</h1>
+              <p className="text-[11px] text-gray-500">
                 {totalCount} {totalCount === 1 ? 'post' : 'posts'}
-                {totalPages > 1 && ` · Page ${page} of ${totalPages}`}
+                {totalPages > 1 && ` · ${page}/${totalPages}`}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Desktop buttons */}
+          <div className="hidden lg:flex flex-col gap-2">
+            <motion.button
+              onClick={() => setShowAddPost(true)}
+              className="flex items-center justify-center gap-2 px-3 py-2 text-white text-xs rounded-md font-semibold cursor-pointer w-full"
+              style={{
+                background: 'linear-gradient(135deg, #00d4ff, #bf5af2)',
+                color: '#0a0e17',
+                boxShadow: '0 0 20px rgba(0, 212, 255, 0.2)',
+              }}
+              whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(0, 212, 255, 0.4)' }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Dump it
+            </motion.button>
             <motion.button
               onClick={scramble}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-md font-semibold cursor-pointer"
+              className="flex items-center justify-center gap-2 px-3 py-2 text-xs rounded-md font-semibold cursor-pointer w-full"
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                color: '#9ca3af',
+                background: 'rgba(0, 212, 255, 0.04)',
+                border: '1px solid rgba(0, 212, 255, 0.1)',
+                color: '#4a5568',
               }}
-              whileHover={{ scale: 1.05, borderColor: 'rgba(124, 58, 237, 0.3)', color: '#e5e7eb' }}
-              whileTap={{ y: -6 }}
+              whileHover={{ scale: 1.03, borderColor: 'rgba(0, 212, 255, 0.3)', color: '#00d4ff' }}
+              whileTap={{ y: -4 }}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Scramble
             </motion.button>
+          </div>
+
+          {/* Mobile buttons */}
+          <div className="flex lg:hidden items-center gap-2 ml-auto">
+            <motion.button
+              onClick={scramble}
+              className="p-2 rounded-md cursor-pointer"
+              style={{
+                background: 'rgba(0, 212, 255, 0.04)',
+                border: '1px solid rgba(0, 212, 255, 0.1)',
+                color: '#4a5568',
+              }}
+              whileTap={{ y: -4 }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </motion.button>
             <motion.button
               onClick={() => setShowAddPost(true)}
-              className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-md font-semibold cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)',
-              }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124, 58, 237, 0.4)' }}
+              className="p-2 rounded-md cursor-pointer text-white"
+              style={{ background: 'linear-gradient(135deg, #00d4ff, #bf5af2)', color: '#0a0e17' }}
               whileTap={{ scale: 0.95 }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Dump it
             </motion.button>
           </div>
         </div>
+
+        {/* Bottom slogan - desktop only */}
+        <p className="hidden lg:block text-[11px] text-gray-600 italic leading-relaxed">
+          {cat.slogan}
+        </p>
       </motion.div>
 
       {/* Posts */}
-      <div className="max-w-6xl mx-auto">
+      <div className="lg:ml-48 px-2 lg:px-3">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <motion.div
@@ -198,7 +230,7 @@ export default function Wall() {
               className="text-5xl mb-4 block"
               style={{ color: cat.accentColor }}
               animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 0.5, ease: 'easeOut' }}
             >
               {cat.icon}
             </motion.span>
@@ -207,11 +239,11 @@ export default function Wall() {
           </motion.div>
         ) : (
           <div
-            style={{ columnGap: '12px' }}
-            className="[column-count:2] md:[column-count:3] lg:[column-count:4] xl:[column-count:5]"
+            style={{ columnGap: '10px' }}
+            className="[column-count:2] md:[column-count:3] lg:[column-count:4] xl:[column-count:5] 2xl:[column-count:6]"
           >
             {displayPosts.map((post, i) => (
-              <div key={post.id} className="mb-3 break-inside-avoid">
+              <div key={post.id} className="mb-2.5 break-inside-avoid">
                 <PostCard post={post} index={i} shuffleKey={shuffleKey} />
               </div>
             ))}
@@ -231,7 +263,7 @@ export default function Wall() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             className="px-4 py-2 rounded-lg text-sm text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer hover:bg-white/5"
-            style={{ border: '1px solid rgba(99, 102, 241, 0.15)' }}
+            style={{ border: '1px solid rgba(0, 212, 255, 0.1)' }}
           >
             Previous
           </button>
@@ -254,9 +286,9 @@ export default function Wall() {
                   onClick={() => setPage(pageNum)}
                   className="w-9 h-9 rounded-lg text-sm cursor-pointer"
                   style={{
-                    background: page === pageNum ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'transparent',
-                    color: page === pageNum ? 'white' : '#9ca3af',
-                    border: page === pageNum ? 'none' : '1px solid rgba(99, 102, 241, 0.1)',
+                    background: page === pageNum ? 'linear-gradient(135deg, #00d4ff, #bf5af2)' : 'transparent',
+                    color: page === pageNum ? '#0a0e17' : '#4a5568',
+                    border: page === pageNum ? 'none' : '1px solid rgba(0, 212, 255, 0.08)',
                   }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -271,7 +303,7 @@ export default function Wall() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 rounded-lg text-sm text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer hover:bg-white/5"
-            style={{ border: '1px solid rgba(99, 102, 241, 0.15)' }}
+            style={{ border: '1px solid rgba(0, 212, 255, 0.1)' }}
           >
             Next
           </button>

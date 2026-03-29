@@ -54,8 +54,8 @@ export default function PostCard({ post, index = 0, shuffleKey = 0 }) {
       className="rounded-lg p-4 flex flex-col justify-between break-words cursor-default"
       style={{
         background: cardStyle.bgColor,
-        border: '1px solid rgba(255, 255, 255, 0.04)',
-        boxShadow: '0 2px 15px rgba(0, 0, 0, 0.25)',
+        border: `1px solid ${category?.accentColor || '#00d4ff'}08`,
+        boxShadow: '0 2px 15px rgba(0, 0, 0, 0.3)',
         fontFamily: cardStyle.font,
         transform: `rotate(${cardStyle.rotation}deg) translate(${cardStyle.offsetX}px, ${cardStyle.offsetY}px)`,
       }}
@@ -66,8 +66,8 @@ export default function PostCard({ post, index = 0, shuffleKey = 0 }) {
         scale: 1.05,
         rotate: 0,
         zIndex: 50,
-        boxShadow: `0 15px 40px rgba(0, 0, 0, 0.5), 0 0 25px ${category?.accentColor || '#6366f1'}15`,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        boxShadow: `0 15px 40px rgba(0, 0, 0, 0.5), 0 0 20px ${category?.accentColor || '#00d4ff'}20`,
+        borderColor: `${category?.accentColor || '#00d4ff'}25`,
       }}
     >
       <p className={`text-gray-200 leading-relaxed whitespace-pre-wrap flex-1 ${cardStyle.size}`}>
