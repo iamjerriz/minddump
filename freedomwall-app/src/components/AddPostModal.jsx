@@ -3,9 +3,11 @@ import { motion } from 'framer-motion'
 import { useAuth } from '../context/useAuth'
 import { supabase } from '../lib/supabase'
 import { getCategoryById } from '../lib/categories'
+import { generateRandomName } from '../lib/randomName'
 
 export default function AddPostModal({ category, onClose, onPostCreated }) {
   const [content, setContent] = useState('')
+  const [anonymous, setAnonymous] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const { user, signInWithGoogle } = useAuth()
   const cat = getCategoryById(category)
@@ -15,10 +17,13 @@ export default function AddPostModal({ category, onClose, onPostCreated }) {
     if (!content.trim() || !user) return
 
     setSubmitting(true)
+    const displayName = anonymous
+      ? generateRandomName()
+      : (user.user_metadata?.full_name || 'Anonymous')
     const { error } = await supabase.from('posts').insert({
       user_id: user.id,
-      username: user.user_metadata?.full_name || 'Anonymous',
-      avatar_url: user.user_metadata?.avatar_url || '',
+      username: displayName,
+      avatar_url: anonymous ? '' : (user.user_metadata?.avatar_url || ''),
       category,
       content: content.trim(),
     })
@@ -83,20 +88,39 @@ export default function AddPostModal({ category, onClose, onPostCreated }) {
         {user ? (
           <form onSubmit={handleSubmit}>
             <motion.div
-              className="flex items-center gap-2 mb-4"
+              className="flex items-center justify-between mb-4"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <img
-                src={user.user_metadata?.avatar_url}
-                alt=""
-                className="w-7 h-7 rounded-full"
-                style={{ boxShadow: `0 0 8px ${cat?.accentColor}30` }}
-              />
-              <span className="text-sm" style={{ color: '#00d4ff90' }}>
-                {user.user_metadata?.full_name}
-              </span>
+              <div className="flex items-center gap-2">
+                {!anonymous && (
+                  <img
+                    src={user.user_metadata?.avatar_url}
+                    alt=""
+                    className="w-7 h-7 rounded-full"
+                    style={{ boxShadow: `0 0 8px ${cat?.accentColor}30` }}
+                  />
+                )}
+                <span className="text-sm" style={{ color: '#00d4ff90' }}>
+                  {anonymous ? '🎭 Posting anonymously' : user.user_metadata?.full_name}
+                </span>
+              </div>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={anonymous}
+                  onChange={(e) => setAnonymous(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div
+                  className="w-8 h-4.5 rounded-full transition-colors relative peer-checked:after:translate-x-3.5 after:absolute after:top-0.5 after:left-0.5 after:w-3.5 after:h-3.5 after:rounded-full after:transition-transform after:bg-white"
+                  style={{
+                    background: anonymous ? cat?.accentColor || '#00d4ff' : 'rgba(255,255,255,0.1)',
+                  }}
+                />
+                <span className="text-[11px]" style={{ color: '#4a5568' }}>Anon</span>
+              </label>
             </motion.div>
             <motion.textarea
               value={content}
