@@ -1,50 +1,62 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useReducer } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { getCategoryById, POSTS_PER_WALL } from '../lib/categories'
+import { generateSamplePosts } from '../lib/sampleData'
 import PostCard from './PostCard'
 import AddPostModal from './AddPostModal'
+
+const USE_SAMPLE_DATA = true
+
+function postsReducer(state, action) {
+  switch (action.type) {
+    case 'loading':
+      return { ...state, loading: true }
+    case 'loaded':
+      return { loading: false, posts: action.posts, totalCount: action.totalCount }
+    default:
+      return state
+  }
+}
 
 export default function Wall() {
   const { category } = useParams()
   const navigate = useNavigate()
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [{ posts, loading, totalCount }, dispatch] = useReducer(postsReducer, {
+    posts: [],
+    loading: true,
+    totalCount: 0,
+  })
+  const [displayPosts, setDisplayPosts] = useState([])
   const [page, setPage] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
   const [showAddPost, setShowAddPost] = useState(false)
+  const [shuffleKey, setShuffleKey] = useState(0)
 
   const cat = getCategoryById(category)
   const totalPages = Math.max(1, Math.ceil(totalCount / POSTS_PER_WALL))
 
   const fetchPosts = useCallback(async () => {
-    setLoading(true)
+    if (USE_SAMPLE_DATA) {
+      const sample = generateSamplePosts(category, 100)
+      const from = (page - 1) * POSTS_PER_WALL
+      return { posts: sample.slice(from, from + POSTS_PER_WALL), count: sample.length }
+    }
 
     const from = (page - 1) * POSTS_PER_WALL
     const to = from + POSTS_PER_WALL - 1
 
-    const { count } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('category', category)
+    const [countResult, dataResult] = await Promise.all([
+      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('category', category),
+      supabase.from('posts').select('*').eq('category', category)
+        .order('created_at', { ascending: false }).range(from, to),
+    ])
 
-    setTotalCount(count || 0)
-
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('category', category)
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
-    if (error) {
-      console.error('Error fetching posts:', error.message)
+    if (dataResult.error) {
+      console.error('Error fetching posts:', dataResult.error.message)
     }
 
-    setPosts(data || [])
-    setLoading(false)
+    return { posts: dataResult.data || [], count: countResult.count || 0 }
   }, [category, page])
 
   useEffect(() => {
@@ -52,35 +64,46 @@ export default function Wall() {
       navigate('/')
       return
     }
-    fetchPosts()
+
+    let cancelled = false
+    dispatch({ type: 'loading' })
+
+    fetchPosts().then((result) => {
+      if (cancelled) return
+      dispatch({ type: 'loaded', posts: result.posts, totalCount: result.count })
+    })
+
+    return () => { cancelled = true }
   }, [cat, fetchPosts, navigate])
 
+  useEffect(() => {
+    setDisplayPosts(posts)
+  }, [posts])
+
   if (!cat) return null
+
+  const scramble = () => {
+    setDisplayPosts((prev) => {
+      const shuffled = [...prev]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      return shuffled
+    })
+    setShuffleKey((k) => k + 1)
+  }
 
   const handlePostCreated = () => {
     setShowAddPost(false)
     setPage(1)
-    fetchPosts()
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4"
+    <div
+      className="min-h-screen pt-20 pb-12 px-4 relative"
       style={{ background: 'linear-gradient(160deg, #050510 0%, #0a0a20 30%, #0d0818 60%, #080515 100%)' }}
     >
-      {/* Neon ambient */}
-      <div className='fixed inset-0 pointer-events-none overflow-hidden z-0'>
-        <div style={{
-          position: 'absolute', top: '-10%', right: '10%', width: '500px', height: '500px',
-          background: `radial-gradient(circle, ${cat.accentColor}0a 0%, transparent 70%)`,
-          filter: 'blur(80px)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '10%', left: '5%', width: '400px', height: '400px',
-          background: 'radial-gradient(circle, rgba(124, 58, 237, 0.04) 0%, transparent 70%)',
-          filter: 'blur(100px)',
-        }} />
-      </div>
-
       {/* Header */}
       <motion.div
         className="max-w-6xl mx-auto mb-8"
@@ -117,25 +140,43 @@ export default function Wall() {
             </div>
           </div>
 
-          <motion.button
-            onClick={() => setShowAddPost(true)}
-            className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-md font-semibold cursor-pointer"
-            style={{
-              background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-              boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)',
-            }}
-            whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124, 58, 237, 0.4)' }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Dump it
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={scramble}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-md font-semibold cursor-pointer"
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: '#9ca3af',
+              }}
+              whileHover={{ scale: 1.05, borderColor: 'rgba(124, 58, 237, 0.3)', color: '#e5e7eb' }}
+              whileTap={{ y: -6 }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Scramble
+            </motion.button>
+            <motion.button
+              onClick={() => setShowAddPost(true)}
+              className="flex items-center gap-2 px-5 py-2.5 text-white text-sm rounded-md font-semibold cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)',
+              }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124, 58, 237, 0.4)' }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Dump it
+            </motion.button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Posts Grid */}
+      {/* Posts */}
       <div className="max-w-6xl mx-auto">
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -146,7 +187,7 @@ export default function Wall() {
               transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
             />
           </div>
-        ) : posts.length === 0 ? (
+        ) : displayPosts.length === 0 ? (
           <motion.div
             className="text-center py-20"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -165,18 +206,16 @@ export default function Wall() {
             <p className="text-gray-600 text-sm">Be the first to dump something.</p>
           </motion.div>
         ) : (
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.04 } },
-            }}
+          <div
+            style={{ columnGap: '12px' }}
+            className="[column-count:2] md:[column-count:3] lg:[column-count:4] xl:[column-count:5]"
           >
-            {posts.map((post, i) => (
-              <PostCard key={post.id} post={post} index={i} />
+            {displayPosts.map((post, i) => (
+              <div key={post.id} className="mb-3 break-inside-avoid">
+                <PostCard post={post} index={i} shuffleKey={shuffleKey} />
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
 
@@ -215,9 +254,7 @@ export default function Wall() {
                   onClick={() => setPage(pageNum)}
                   className="w-9 h-9 rounded-lg text-sm cursor-pointer"
                   style={{
-                    background: page === pageNum
-                      ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
-                      : 'transparent',
+                    background: page === pageNum ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'transparent',
                     color: page === pageNum ? 'white' : '#9ca3af',
                     border: page === pageNum ? 'none' : '1px solid rgba(99, 102, 241, 0.1)',
                   }}

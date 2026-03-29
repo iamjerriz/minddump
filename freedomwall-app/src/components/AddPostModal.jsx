@@ -1,7 +1,6 @@
 import { useState } from 'react'
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { supabase } from '../lib/supabase'
 import { getCategoryById } from '../lib/categories'
 
@@ -37,7 +36,7 @@ export default function AddPostModal({ category, onClose, onPostCreated }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[2000] flex items-center justify-center p-4"
+      className="fixed inset-0 z-2000 flex items-center justify-center p-4"
       style={{ backdropFilter: 'blur(8px)' }}
       onClick={onClose}
       initial={{ background: 'rgba(0, 0, 0, 0)' }}
