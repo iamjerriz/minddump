@@ -27,7 +27,7 @@ function seededRandom(seed) {
 
 const FONTS = ["'Courier New', monospace", "'Georgia', serif", 'system-ui, sans-serif', "'Times New Roman', serif", "'Segoe UI', sans-serif"];
 
-export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete }) {
+export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, onLike, likeCount = 0, liked = false }) {
   const { user } = useAuth();
   const isOwner = user && user.id === post.user_id;
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -50,7 +50,7 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete }) 
 
   return (
     <motion.div
-      className='rounded-lg p-4 flex flex-col justify-between wrap-break-word cursor-default'
+      className='rounded-lg p-4 flex flex-col justify-between wrap-break-word cursor-default relative'
       style={{
         background: cardStyle.bgColor,
         border: `1px solid ${category?.accentColor || '#00d4ff'}08`,
@@ -69,7 +69,27 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete }) 
         borderColor: `${category?.accentColor || '#00d4ff'}25`,
       }}
     >
-      <p className={`text-gray-200 leading-relaxed whitespace-pre-wrap flex-1 ${cardStyle.size}`}>{post.content}</p>
+      <motion.button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (user) onLike?.(post.id);
+        }}
+        className='absolute top-2 right-2 flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded'
+        style={{ color: liked ? category?.accentColor : '#4a5568' }}
+        whileTap={{ scale: 0.85 }}
+        whileHover={{ scale: 1.15 }}
+        title={user ? (liked ? 'Unlike' : 'Like') : 'Sign in to like'}
+      >
+        <motion.span
+          className='text-xs leading-none'
+          animate={liked ? { scale: [1, 1.4, 1] } : {}}
+          transition={{ duration: 0.3 }}
+        >
+          {category?.icon}
+        </motion.span>
+        {likeCount > 0 && <span className='text-[10px]'>{likeCount}</span>}
+      </motion.button>
+      <p className={`text-gray-200 leading-relaxed whitespace-pre-wrap flex-1 pr-8 ${cardStyle.size}`}>{post.content}</p>
       <div className='flex items-center justify-between mt-3 pt-2' style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <div className='flex items-center gap-1.5'>
           {post.avatar_url ? (

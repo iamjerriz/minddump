@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { getCategoryById, POSTS_PER_WALL } from '../lib/categories'
 import { generateSamplePosts } from '../lib/sampleData'
+import { useAuth } from '../context/useAuth'
 import PostCard from './PostCard'
 import AddPostModal from './AddPostModal'
 
@@ -29,12 +30,15 @@ function postsReducer(state, action) {
 export default function Wall() {
   const { category } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [{ posts, loading, totalCount }, dispatch] = useReducer(postsReducer, {
     posts: [],
     loading: true,
     totalCount: 0,
   })
   const [displayPosts, setDisplayPosts] = useState([])
+  const [likeCounts, setLikeCounts] = useState({})
+  const [userLikes, setUserLikes] = useState(new Set())
   const [page, setPage] = useState(1)
   const [showAddPost, setShowAddPost] = useState(false)
   const [shuffleKey, setShuffleKey] = useState(0)
@@ -65,8 +69,39 @@ export default function Wall() {
       console.error('Error fetching posts:', dataResult.error.message)
     }
 
-    dispatch({ type: 'loaded', posts: dataResult.data || [], totalCount: countResult.count || 0 })
-  }, [category, page])
+    const loadedPosts = dataResult.data || []
+    dispatch({ type: 'loaded', posts: loadedPosts, totalCount: countResult.count || 0 })
+
+    // Fetch like counts for loaded posts
+    if (loadedPosts.length > 0) {
+      const postIds = loadedPosts.map((p) => p.id)
+      const { data: likesData } = await supabase
+        .from('likes')
+        .select('post_id')
+        .in('post_id', postIds)
+
+      if (likesData) {
+        const counts = {}
+        likesData.forEach((like) => {
+          counts[like.post_id] = (counts[like.post_id] || 0) + 1
+        })
+        setLikeCounts(counts)
+      }
+
+      // Fetch current user's likes
+      if (user) {
+        const { data: userLikesData } = await supabase
+          .from('likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', postIds)
+
+        if (userLikesData) {
+          setUserLikes(new Set(userLikesData.map((l) => l.post_id)))
+        }
+      }
+    }
+  }, [category, page, user])
 
   useEffect(() => {
     if (!cat) {
@@ -92,6 +127,37 @@ export default function Wall() {
       return shuffled
     })
     setShuffleKey((k) => k + 1)
+  }
+
+  const handleLike = async (postId) => {
+    if (!user) return
+    const liked = userLikes.has(postId)
+
+    // Optimistic update
+    setUserLikes((prev) => {
+      const next = new Set(prev)
+      liked ? next.delete(postId) : next.add(postId)
+      return next
+    })
+    setLikeCounts((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || 0) + (liked ? -1 : 1),
+    }))
+
+    if (liked) {
+      const { error } = await supabase.from('likes').delete().eq('user_id', user.id).eq('post_id', postId)
+      if (error) {
+        // Revert on failure
+        setUserLikes((prev) => new Set(prev).add(postId))
+        setLikeCounts((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }))
+      }
+    } else {
+      const { error } = await supabase.from('likes').insert({ user_id: user.id, post_id: postId })
+      if (error) {
+        setUserLikes((prev) => { const next = new Set(prev); next.delete(postId); return next })
+        setLikeCounts((prev) => ({ ...prev, [postId]: Math.max(0, (prev[postId] || 0) - 1) }))
+      }
+    }
   }
 
   const handleDelete = async (postId) => {
@@ -260,7 +326,15 @@ export default function Wall() {
           >
             {displayPosts.map((post, i) => (
               <div key={post.id} className="mb-2.5 break-inside-avoid">
-                <PostCard post={post} index={i} shuffleKey={shuffleKey} onDelete={handleDelete} />
+                <PostCard
+                  post={post}
+                  index={i}
+                  shuffleKey={shuffleKey}
+                  onDelete={handleDelete}
+                  onLike={handleLike}
+                  likeCount={likeCounts[post.id] || 0}
+                  liked={userLikes.has(post.id)}
+                />
               </div>
             ))}
           </div>
