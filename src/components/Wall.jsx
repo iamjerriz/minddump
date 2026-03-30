@@ -15,6 +15,12 @@ function postsReducer(state, action) {
       return { ...state, loading: true }
     case 'loaded':
       return { loading: false, posts: action.posts, totalCount: action.totalCount }
+    case 'deleted':
+      return {
+        ...state,
+        posts: state.posts.filter((p) => p.id !== action.id),
+        totalCount: Math.max(0, state.totalCount - 1),
+      }
     default:
       return state
   }
@@ -86,6 +92,16 @@ export default function Wall() {
       return shuffled
     })
     setShuffleKey((k) => k + 1)
+  }
+
+  const handleDelete = async (postId) => {
+    const { error } = await supabase.from('posts').delete().eq('id', postId)
+    if (error) {
+      console.error('Error deleting post:', error.message)
+      return
+    }
+    dispatch({ type: 'deleted', id: postId })
+    setDisplayPosts((prev) => prev.filter((p) => p.id !== postId))
   }
 
   const handlePostCreated = () => {
@@ -244,7 +260,7 @@ export default function Wall() {
           >
             {displayPosts.map((post, i) => (
               <div key={post.id} className="mb-2.5 break-inside-avoid">
-                <PostCard post={post} index={i} shuffleKey={shuffleKey} />
+                <PostCard post={post} index={i} shuffleKey={shuffleKey} onDelete={handleDelete} />
               </div>
             ))}
           </div>
