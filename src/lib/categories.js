@@ -12,7 +12,7 @@ export const CATEGORIES = [
     id: 'thoughts',
     label: 'Thoughts',
     icon: '◉',
-    description: 'Unload what\'s in your head',
+    description: "Unload what's in your head",
     slogan: 'Think it. Dump it. Breathe.',
     accentColor: '#00d4ff',
     noteColors: ['#0a1418', '#0c181e', '#0e1c22', '#091216', '#101e24'],
@@ -53,10 +53,10 @@ export const CATEGORIES = [
     accentColor: '#30d158',
     noteColors: ['#0a1a0e', '#0c1f10', '#0e2414', '#09180c', '#102a16'],
   },
-]
+];
 
-export const POSTS_PER_WALL = 100
+export const POSTS_PER_WALL = 100;
 
 export function getCategoryById(id) {
-  return CATEGORIES.find((c) => c.id === id)
+  return CATEGORIES.find((c) => c.id === id);
 }

@@ -19,13 +19,13 @@ MindDump is an anonymous-friendly wall where users can post their thoughts acros
 
 ## Tech Stack
 
-| Layer     | Tech                        |
-|-----------|-----------------------------|
-| Frontend  | React + Vite                |
-| Styling   | Tailwind CSS v4             |
-| Animation | Framer Motion               |
+| Layer     | Tech                           |
+| --------- | ------------------------------ |
+| Frontend  | React + Vite                   |
+| Styling   | Tailwind CSS v4                |
+| Animation | Framer Motion                  |
 | Backend   | Supabase (Postgres, Auth, API) |
-| Auth      | Google OAuth via Supabase   |
+| Auth      | Google OAuth via Supabase      |
 
 ## Getting Started
 

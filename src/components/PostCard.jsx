@@ -25,9 +25,23 @@ function seededRandom(seed) {
   };
 }
 
-const FONTS = ["'Courier New', monospace", "'Georgia', serif", 'system-ui, sans-serif', "'Times New Roman', serif", "'Segoe UI', sans-serif"];
+const FONTS = [
+  "'Courier New', monospace",
+  "'Georgia', serif",
+  'system-ui, sans-serif',
+  "'Times New Roman', serif",
+  "'Segoe UI', sans-serif",
+];
 
-export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, onLike, likeCount = 0, liked = false }) {
+export default function PostCard({
+  post,
+  index = 0,
+  shuffleKey = 0,
+  onDelete,
+  onLike,
+  likeCount = 0,
+  liked = false,
+}) {
   const { user } = useAuth();
   const isOwner = user && user.id === post.user_id;
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,7 +56,8 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
     const offsetY = (rand() - 0.5) * 8;
     const bgColor = colors[Math.floor(rand() * colors.length)];
     const font = FONTS[Math.floor(rand() * FONTS.length)];
-    const size = rand() > 0.7 ? 'text-base' : rand() > 0.3 ? 'text-sm' : 'text-xs';
+    const size =
+      rand() > 0.7 ? 'text-base' : rand() > 0.3 ? 'text-sm' : 'text-xs';
     const initialSpin = (rand() - 0.5) * 10;
 
     return { rotation, offsetX, offsetY, bgColor, font, size, initialSpin };
@@ -50,7 +65,7 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
 
   return (
     <motion.div
-      className='rounded-lg p-4 flex flex-col justify-between wrap-break-word cursor-default relative'
+      className="relative flex cursor-default flex-col justify-between rounded-lg p-4 wrap-break-word"
       style={{
         background: cardStyle.bgColor,
         border: `1px solid ${category?.accentColor || '#00d4ff'}08`,
@@ -58,7 +73,11 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
         fontFamily: cardStyle.font,
         transform: `rotate(${cardStyle.rotation}deg) translate(${cardStyle.offsetX}px, ${cardStyle.offsetY}px)`,
       }}
-      initial={{ opacity: 0, scale: 0.8, rotate: cardStyle.rotation + cardStyle.initialSpin }}
+      initial={{
+        opacity: 0,
+        scale: 0.8,
+        rotate: cardStyle.rotation + cardStyle.initialSpin,
+      }}
       animate={{ opacity: 1, scale: 1, rotate: cardStyle.rotation }}
       transition={{ duration: 0.4, delay: index * 0.02, ease: 'easeOut' }}
       whileHover={{
@@ -74,62 +93,92 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
           e.stopPropagation();
           if (user) onLike?.(post.id);
         }}
-        className='absolute top-2 right-2 flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded'
+        className="absolute top-2 right-2 flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5"
         style={{ color: liked ? category?.accentColor : '#4a5568' }}
         whileTap={{ scale: 0.85 }}
         whileHover={{ scale: 1.15 }}
         title={user ? (liked ? 'Unlike' : 'Like') : 'Sign in to like'}
       >
         <motion.span
-          className='text-xs leading-none'
+          className="text-xs leading-none"
           animate={liked ? { scale: [1, 1.4, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
           {category?.icon}
         </motion.span>
-        {likeCount > 0 && <span className='text-[10px]'>{likeCount}</span>}
+        {likeCount > 0 && <span className="text-[10px]">{likeCount}</span>}
       </motion.button>
-      <p className={`text-gray-200 leading-relaxed whitespace-pre-wrap flex-1 pr-8 ${cardStyle.size}`}>{post.content}</p>
-      <div className='flex items-center justify-between mt-3 pt-2' style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-        <div className='flex items-center gap-1.5'>
+      <p
+        className={`flex-1 pr-8 leading-relaxed whitespace-pre-wrap text-gray-200 ${cardStyle.size}`}
+      >
+        {post.content}
+      </p>
+      <div
+        className="mt-3 flex items-center justify-between pt-2"
+        style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}
+      >
+        <div className="flex items-center gap-1.5">
           {post.avatar_url ? (
-            <img src={post.avatar_url} alt='' className='w-4 h-4 rounded-full' />
+            <img
+              src={post.avatar_url}
+              alt=""
+              className="h-4 w-4 rounded-full"
+            />
           ) : (
-            <div className='w-4 h-4 rounded-full flex items-center justify-center text-[9px]' style={{ background: `${category?.accentColor || '#6366f1'}25`, color: category?.accentColor }}>
+            <div
+              className="flex h-4 w-4 items-center justify-center rounded-full text-[9px]"
+              style={{
+                background: `${category?.accentColor || '#6366f1'}25`,
+                color: category?.accentColor,
+              }}
+            >
               {post.username?.[0]?.toUpperCase()}
             </div>
           )}
-          <span className='text-[11px] text-gray-500'>{post.username}</span>
+          <span className="text-[11px] text-gray-500">{post.username}</span>
         </div>
-        <div className='flex items-center gap-2'>
-          <span className='text-[10px] text-gray-700'>{formatDate(post.created_at)}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-700">
+            {formatDate(post.created_at)}
+          </span>
           {isOwner && (
-            <AnimatePresence mode='wait'>
+            <AnimatePresence mode="wait">
               {!confirmDelete ? (
                 <motion.button
-                  key='delete'
+                  key="delete"
                   onClick={(e) => {
                     e.stopPropagation();
                     setConfirmDelete(true);
                   }}
-                  className='text-gray-600 hover:text-red-400 transition-colors cursor-pointer p-0.5'
+                  className="cursor-pointer p-0.5 text-gray-600 transition-colors hover:text-red-400"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   whileHover={{ scale: 1.2 }}
-                  title='Delete post'
+                  title="Delete post"
                 >
-                  <svg className='w-3 h-3' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                     <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth={2}
-                      d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
                 </motion.button>
               ) : (
-                <motion.div key='confirm' className='flex items-center gap-1' initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
+                <motion.div
+                  key="confirm"
+                  className="flex items-center gap-1"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -137,7 +186,7 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
                       onDelete?.(post.id).finally(() => setDeleting(false));
                     }}
                     disabled={deleting}
-                    className='text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 cursor-pointer disabled:opacity-50'
+                    className="cursor-pointer rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/30 disabled:opacity-50"
                   >
                     {deleting ? '...' : 'Yes'}
                   </button>
@@ -146,7 +195,7 @@ export default function PostCard({ post, index = 0, shuffleKey = 0, onDelete, on
                       e.stopPropagation();
                       setConfirmDelete(false);
                     }}
-                    className='text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 hover:bg-gray-500/30 cursor-pointer'
+                    className="cursor-pointer rounded bg-gray-500/20 px-1.5 py-0.5 text-[10px] text-gray-400 hover:bg-gray-500/30"
                   >
                     No
                   </button>

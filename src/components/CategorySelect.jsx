@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { CATEGORIES } from '../lib/categories'
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { CATEGORIES } from '../lib/categories';
 
 const MINDDUMP_CHARS = [
   { char: 'M', color: '#00d4ff' },
@@ -11,12 +11,12 @@ const MINDDUMP_CHARS = [
   { char: 'u', color: '#ff3d85' },
   { char: 'm', color: '#ff4d75' },
   { char: 'p', color: '#ff5d65' },
-]
+];
 
 function WavingTitle() {
   return (
     <motion.h1
-      className="text-5xl md:text-6xl font-black mb-4 tracking-tight"
+      className="mb-4 text-5xl font-black tracking-tight md:text-6xl"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.1 }}
@@ -39,47 +39,68 @@ function WavingTitle() {
         </motion.span>
       ))}
     </motion.h1>
-  )
+  );
 }
 
 export default function CategorySelect() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div
-      className="min-h-screen pt-24 pb-16 px-4 flex flex-col items-center relative"
+      className="relative flex min-h-screen flex-col items-center px-4 pt-24 pb-16"
       style={{ background: '#0a0e17' }}
     >
       {/* Neon ambient blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div style={{
-          position: 'absolute', top: '-15%', left: '10%', width: '500px', height: '500px',
-          background: 'radial-gradient(circle, rgba(0, 212, 255, 0.06) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '0%', right: '5%', width: '600px', height: '400px',
-          background: 'radial-gradient(circle, rgba(255, 45, 149, 0.05) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }} />
-        <div style={{
-          position: 'absolute', top: '40%', left: '50%', width: '400px', height: '400px',
-          transform: 'translateX(-50%)',
-          background: 'radial-gradient(circle, rgba(191, 90, 242, 0.04) 0%, transparent 70%)',
-          filter: 'blur(100px)',
-        }} />
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div
+          style={{
+            position: 'absolute',
+            top: '-15%',
+            left: '10%',
+            width: '500px',
+            height: '500px',
+            background:
+              'radial-gradient(circle, rgba(0, 212, 255, 0.06) 0%, transparent 70%)',
+            filter: 'blur(60px)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '0%',
+            right: '5%',
+            width: '600px',
+            height: '400px',
+            background:
+              'radial-gradient(circle, rgba(255, 45, 149, 0.05) 0%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            width: '400px',
+            height: '400px',
+            transform: 'translateX(-50%)',
+            background:
+              'radial-gradient(circle, rgba(191, 90, 242, 0.04) 0%, transparent 70%)',
+            filter: 'blur(100px)',
+          }}
+        />
       </div>
 
       {/* Hero */}
       <motion.div
-        className="text-center mb-16"
+        className="mb-16 text-center"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <WavingTitle />
         <motion.p
-          className="text-lg mb-1 font-medium"
+          className="mb-1 text-lg font-medium"
           style={{ color: 'rgba(0, 212, 255, 0.5)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -90,7 +111,7 @@ export default function CategorySelect() {
         <motion.p
           className="text-sm"
           style={{ color: 'rgba(255, 45, 149, 0.3)' }}
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
@@ -99,18 +120,26 @@ export default function CategorySelect() {
       </motion.div>
 
       {/* Category Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl w-full relative z-10">
+      <div className="relative z-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CATEGORIES.map((cat, i) => (
           <motion.button
             key={cat.id}
             onClick={() => navigate(`/wall/${cat.id}`)}
-            className="group relative p-6 rounded-xl text-left cursor-pointer"
+            className="group relative cursor-pointer rounded-xl p-6 text-left"
             style={{
               background: 'rgba(0, 212, 255, 0.02)',
               border: '1px solid rgba(0, 212, 255, 0.06)',
             }}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.4, delay: 0.2 + i * 0.08, ease: 'easeOut' } }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              transition: {
+                duration: 0.4,
+                delay: 0.2 + i * 0.08,
+                ease: 'easeOut',
+              },
+            }}
             whileHover={{
               scale: 1.03,
               y: -4,
@@ -121,7 +150,7 @@ export default function CategorySelect() {
             }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="mb-4 flex items-start justify-between">
               <motion.span
                 className="text-3xl font-light"
                 style={{ color: cat.accentColor }}
@@ -131,15 +160,24 @@ export default function CategorySelect() {
                 {cat.icon}
               </motion.span>
               <svg
-                className="w-4 h-4 transition-colors"
+                className="h-4 w-4 transition-colors"
                 style={{ color: 'rgba(0, 212, 255, 0.15)' }}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 17L17 7M17 7H7M17 7v10"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-white mb-1">{cat.label}</h3>
-            <p className="text-sm" style={{ color: '#4a5568' }}>{cat.description}</p>
+            <h3 className="mb-1 text-lg font-bold text-white">{cat.label}</h3>
+            <p className="text-sm" style={{ color: '#4a5568' }}>
+              {cat.description}
+            </p>
           </motion.button>
         ))}
       </div>
@@ -151,10 +189,13 @@ export default function CategorySelect() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
       >
-        <p className="text-xs tracking-widest uppercase" style={{ color: 'rgba(0, 212, 255, 0.2)' }}>
+        <p
+          className="text-xs tracking-widest uppercase"
+          style={{ color: 'rgba(0, 212, 255, 0.2)' }}
+        >
           No filters. No receipts. Just dump it.
         </p>
       </motion.div>
     </div>
-  )
+  );
 }
