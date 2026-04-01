@@ -1,17 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CATEGORIES } from '../lib/categories';
-
-const MINDDUMP_CHARS = [
-  { char: 'M', color: '#00d4ff' },
-  { char: 'i', color: '#00c4f0' },
-  { char: 'n', color: '#20b4e0' },
-  { char: 'd', color: '#40a4d0' },
-  { char: 'D', color: '#ff2d95' },
-  { char: 'u', color: '#ff3d85' },
-  { char: 'm', color: '#ff4d75' },
-  { char: 'p', color: '#ff5d65' },
-];
+import { MINDDUMP_CHARS } from '../lib/constants';
 
 function WavingTitle() {
   return (
@@ -110,7 +100,7 @@ export default function CategorySelect() {
         </motion.p>
         <motion.p
           className="text-sm"
-          style={{ color: 'rgba(255, 45, 149, 0.3)' }}
+          style={{ color: 'rgba(255, 45, 149, 0.8)' }}
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -175,9 +165,7 @@ export default function CategorySelect() {
               </svg>
             </div>
             <h3 className="mb-1 text-lg font-bold text-white">{cat.label}</h3>
-            <p className="text-sm" style={{ color: '#4a5568' }}>
-              {cat.description}
-            </p>
+            <p className="text-sm text-gray-400">{cat.description}</p>
           </motion.button>
         ))}
       </div>
@@ -191,7 +179,7 @@ export default function CategorySelect() {
       >
         <p
           className="text-xs tracking-widest uppercase"
-          style={{ color: 'rgba(0, 212, 255, 0.2)' }}
+          style={{ color: 'rgba(0, 212, 255, 0.8)' }}
         >
           No filters. No receipts. Just dump it.
         </p>

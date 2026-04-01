@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import { getCategoryById } from '../lib/categories';
-import { generateRandomName } from '../lib/randomName';
+import { generateRandomName } from '../lib/helpers';
 
 export default function AddPostModal({ category, onClose, onPostCreated }) {
   const [content, setContent] = useState('');
@@ -123,9 +123,7 @@ export default function AddPostModal({ category, onClose, onPostCreated }) {
                       : 'rgba(255,255,255,0.1)',
                   }}
                 />
-                <span className="text-[11px]" style={{ color: '#4a5568' }}>
-                  Anon
-                </span>
+                <span className="text-[11px]">Anon</span>
               </label>
             </motion.div>
             <motion.textarea
@@ -152,15 +150,14 @@ export default function AddPostModal({ category, onClose, onPostCreated }) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <span className="text-xs" style={{ color: '#2d3748' }}>
+              <span className="text-xs text-gray-300">
                 {content.length}/500
               </span>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="cursor-pointer px-4 py-2 text-sm transition-colors hover:text-gray-200"
-                  style={{ color: '#4a5568' }}
+                  className="cursor-pointer px-4 py-2 text-sm text-gray-300 transition-colors"
                 >
                   Cancel
                 </button>

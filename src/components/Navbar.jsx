@@ -7,7 +7,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="fixed top-0 right-0 left-0 z-[1000] flex items-center justify-between px-5 py-3"
+      className="fixed top-0 right-0 left-0 z-1000 flex items-center justify-between px-5 py-3"
       style={{
         background: 'rgba(10, 14, 23, 0.9)',
         backdropFilter: 'blur(20px)',
@@ -33,10 +33,7 @@ export default function Navbar() {
             <span style={{ color: '#00d4ff' }}>Mind</span>
             <span style={{ color: '#ff2d95' }}>Dump</span>
           </span>
-          <span
-            className="mt-0.5 text-[10px] leading-none tracking-widest uppercase"
-            style={{ color: '#00d4ff50' }}
-          >
+          <span className="mt-0.5 text-[10px] leading-none tracking-widest text-gray-400 uppercase">
             let it out
           </span>
         </div>
@@ -65,7 +62,6 @@ export default function Navbar() {
               onClick={signOut}
               className="cursor-pointer rounded-md px-3 py-1.5 text-sm transition-all duration-200 hover:bg-[#ff453a10] hover:text-[#ff453a]"
               style={{
-                color: '#4a5568',
                 border: '1px solid rgba(0, 212, 255, 0.06)',
               }}
             >

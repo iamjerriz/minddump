@@ -1,3 +1,22 @@
+const MINDDUMP_CHARS = [
+  { char: 'M', color: '#00d4ff' },
+  { char: 'i', color: '#00c4f0' },
+  { char: 'n', color: '#20b4e0' },
+  { char: 'd', color: '#40a4d0' },
+  { char: 'D', color: '#ff2d95' },
+  { char: 'u', color: '#ff3d85' },
+  { char: 'm', color: '#ff4d75' },
+  { char: 'p', color: '#ff5d65' },
+];
+
+const FONTS = [
+  "'Courier New', monospace",
+  "'Georgia', serif",
+  'system-ui, sans-serif',
+  "'Times New Roman', serif",
+  "'Segoe UI', sans-serif",
+];
+
 const ADJECTIVES = [
   'Silent',
   'Cosmic',
@@ -86,8 +105,4 @@ const NOUNS = [
   'Mist',
 ];
 
-export function generateRandomName() {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  return `${adj} ${noun}`;
-}
+export { MINDDUMP_CHARS, FONTS, ADJECTIVES, NOUNS };

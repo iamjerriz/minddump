@@ -2,36 +2,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getCategoryById } from '../lib/categories';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
-
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function seededRandom(seed) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
-  }
-  return () => {
-    h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
-    h = Math.imul(h ^ (h >>> 13), 0x45d9f3b);
-    h = (h ^ (h >>> 16)) >>> 0;
-    return h / 4294967296;
-  };
-}
-
-const FONTS = [
-  "'Courier New', monospace",
-  "'Georgia', serif",
-  'system-ui, sans-serif',
-  "'Times New Roman', serif",
-  "'Segoe UI', sans-serif",
-];
+import { FONTS } from '../lib/constants';
+import { formatDate, seededRandom } from '../lib/helpers';
 
 export default function PostCard({
   post,
@@ -135,10 +107,10 @@ export default function PostCard({
               {post.username?.[0]?.toUpperCase()}
             </div>
           )}
-          <span className="text-[11px] text-gray-500">{post.username}</span>
+          <span className="text-[11px] text-gray-300">{post.username}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-gray-700">
+          <span className="text-[10px] text-gray-300">
             {formatDate(post.created_at)}
           </span>
           {isOwner && (
